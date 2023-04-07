@@ -4,32 +4,30 @@ const queryUrl = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_
 
 // Perform a GET request to the query URL/
 d3.json(queryUrl).then(function (data) {
-  // Once we get a response, send the data.features object to the createFeatures function.
   createFeatures(data.features);
 });
 
 function createFeatures(earthquakeData) {
 
-  // Define a function that we want to run once for each feature in the features array.
-  // Give each feature a popup that describes the place and time of the earthquake.
+// Include popups that provide additional information about the earthquake when its associated marker is clicked.
   function onEachFeature(feature, layer) {
     layer.bindPopup(`<h3>Where: ${feature.properties.place}</h3><hr><p>Time: ${new Date(feature.properties.time)}</p><hr><p>Magnitude: ${feature.properties.mag}`);
     }
 
-  // Create a GeoJSON layer that contains the features array on the earthquakeData object.
+ 
     function createCircleMarker(feature, latlng){
     let options = {
      radius:feature.properties.mag*5,
      fillColor: chooseColor(feature.properties.mag),
      color: chooseColor(feature.properties.mag),
      weight: 1,
-     opacity: 0.8,
+     opacity: chooseColor(feature.geometry.coordinates.depth),
      fillOpacity: 0.35
     } 
     return L.circleMarker(latlng,options);
 }
 
-  // Run the onEachFeature function once for each piece of data in the array.
+
 var earthquakes = L.geoJSON(earthquakeData, {
     onEachFeature: onEachFeature,
     pointToLayer: createCircleMarker
@@ -41,9 +39,9 @@ var earthquakes = L.geoJSON(earthquakeData, {
 
 function chooseColor(mag){
     switch(true){
-        case(1.0 <= mag && mag <= 2.5):
+        case(1.0 <= mag && mag <= 2):
             return "#0071BC"; // Strong blue
-        case (2.5 <= mag && mag <=4.0):
+        case (2 <= mag && mag <=4.0):
             return "#35BC00";
         case (4.0 <= mag && mag <=5.5):
             return "#BCBC00";
@@ -64,16 +62,13 @@ legend.onAdd = function() {
     var grades = [1.0, 2.5, 4.0, 5.5, 8.0];
     var labels = [];
     var legendInfo = "<h4>Magnitude</h4>";
+    div.innerHTML = legendInfo;
 
-    div.innerHTML = legendInfo
 
-    // go through each magnitude item to label and color the legend
-    // push to labels array as list item
     for (var i = 0; i < grades.length; i++) {
           labels.push('<ul style="background-color:' + chooseColor(grades[i] + 1) + '"> <span>' + grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '' : '+') + '</span></ul>');
         }
 
-      // add each label list item to the div under the <ul> tag
       div.innerHTML += "<ul>" + labels.join("") + "</ul>";
     
     return div;
